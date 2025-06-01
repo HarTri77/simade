@@ -1,0 +1,57 @@
+server {
+    listen 80;
+    listen [::]:80;
+    server_name simade.cicd.my.id;  #perlu diganti
+    root /var/www/laravel-d4rpl2c-kelompok3/public; #perlu diganti
+    index index.php index.html index.htm;
+
+    # SSL Configuration (uncomment after setting up SSL)
+    # listen 443 ssl http2;
+    # listen [::]:443 ssl http2;
+    # ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_param HTTPS $https if_not_empty;
+        fastcgi_read_timeout 300;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    # Laravel specific optimizations
+    location ~* \.(jpg|jpeg|gif|png|css|js|ico|webp|svg|woff|woff2|ttf|eot)$ {
+        expires 365d;
+        access_log off;
+        add_header Cache-Control "public, no-transform";
+        try_files $uri =404;
+    }
+
+    # Disable logging for assets
+    location ~* \.(?:jpg|jpeg|gif|png|ico|css|js|svg|woff2)$ {
+        access_log off;
+    }
+
+    # Security headers
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+}
